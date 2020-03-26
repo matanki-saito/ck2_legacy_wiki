@@ -1,12 +1,22 @@
 <?php
 // PukiWiki - Yet another WikiWikiWeb clone
-// pukiwiki.ini.php
-// Copyright
-//   2002-2019 PukiWiki Development Team
+// $Id: pukiwiki.ini.php,v 1.140 2006/06/11 14:35:39 henoheno Exp $
+// Copyright (C)
+//   2002-2006 PukiWiki Developers Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
 // PukiWiki main setting file
+
+/////////////////////////////////////////////////
+// spam
+//
+        define('SPAM_FILTER_COND', '#atag() or #onlyeng() or #filename() or #uaunknown() or #ipcountry() or #formname()');
+        define('SPAM_FILTER_NGREG_PLUGIN_NAME', 'comment,pcomment');
+        define('SPAM_FILTER_WHITEREG', '/(neohoi2\.sakura\.ne\.jp|google\.(com|co\.jp))/i');
+        define('SPAM_FILTER_RECAPTCHA_PUBLICKEY',  getenv('SPAM_FILTER_RECAPTCHA_PUBLICKEY'));
+        define('SPAM_FILTER_RECAPTCHA_PRIVATEKEY', getenv('SPAM_FILTER_RECAPTCHA_PRIVATEKEY')));
+        define('SPAM_FILTER_CAPTCHA_COND', '#url and (#ipcountry() or #ipdnsbl() or #onlyeng())');
 
 /////////////////////////////////////////////////
 // Functionality settings
@@ -76,6 +86,7 @@ define('BACKUP_DIR',    DATA_HOME . 'backup/'   ); // Backups
 define('CACHE_DIR',     DATA_HOME . 'cache/'    ); // Some sort of caches
 define('UPLOAD_DIR',    DATA_HOME . 'attach/'   ); // Attached files and logs
 define('COUNTER_DIR',   DATA_HOME . 'counter/'  ); // Counter plugin's counts
+define('TRACKBACK_DIR', DATA_HOME . 'trackback/'); // TrackBack logs
 define('PLUGIN_DIR',    DATA_HOME . 'plugin/'   ); // Plugin directory
 
 /////////////////////////////////////////////////
@@ -110,7 +121,7 @@ default  :
 /////////////////////////////////////////////////
 // Title of your Wikisite (Name this)
 // Also used as RSS feed's channel name etc
-$page_title = 'PukiWiki';
+$page_title = 'CK2 Wiki';
 
 // Specify PukiWiki URL (default: auto)
 //$script = 'http://example.com/pukiwiki/';
@@ -119,10 +130,10 @@ $page_title = 'PukiWiki';
 //$script_directory_index = 'index.php';
 
 // Site admin's name (CHANGE THIS)
-$modifier = 'anonymous';
+$modifier = 'ck2 wiki admin';
 
 // Site admin's Web page (CHANGE THIS)
-$modifierlink = 'http://pukiwiki.example.com/';
+$modifierlink = 'http://example.com';
 
 // Default page name
 $defaultpage  = 'FrontPage';     // Top / Default page
@@ -150,12 +161,25 @@ $nofollow = 0; // 1 = Try hiding from search engines
 
 /////////////////////////////////////////////////
 
-// PKWK_ALLOW_JAVASCRIPT - Must be 1 only for compatibility
-define('PKWK_ALLOW_JAVASCRIPT', 1);
+// PKWK_ALLOW_JAVASCRIPT - Allow / Prohibit using JavaScript
+define('PKWK_ALLOW_JAVASCRIPT', 0);
+
+/////////////////////////////////////////////////
+// TrackBack feature
+
+// Enable Trackback
+$trackback = 0;
+
+// Show trackbacks with an another window (using JavaScript)
+$trackback_javascript = 0;
+
+/////////////////////////////////////////////////
+// Referer list feature
+$referer = 0;
 
 /////////////////////////////////////////////////
 // _Disable_ WikiName auto-linking
-$nowikiname = 0;
+$nowikiname = 1;
 
 /////////////////////////////////////////////////
 // AutoLink feature
@@ -176,16 +200,14 @@ $notimeupdate = 1;
 // Admin password for this Wikisite
 
 // Default: always fail
-$adminpass = '{x-php-md5}!';
+$adminpass = getenv('ADMIN_PASS');
 
 // Sample:
 //$adminpass = 'pass'; // Cleartext
 //$adminpass = '{x-php-md5}1a1dc91c907325c69271ddf0c944bc72'; // PHP md5()  'pass'
-//$adminpass = '{x-php-sha256}d74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1'; // PHP sha256  'pass'
 //$adminpass = '{CRYPT}$1$AR.Gk94x$uCe8fUUGMfxAPH83psCZG/';   // LDAP CRYPT 'pass'
 //$adminpass = '{MD5}Gh3JHJBzJcaScd3wyUS8cg==';               // LDAP MD5   'pass'
 //$adminpass = '{SMD5}o7lTdtHFJDqxFOVX09C8QnlmYmZnd2Qx';      // LDAP SMD5  'pass'
-//$adminpass = '{SHA256}10/w7o2juYBrGMh32/KbveULW9jk2tejpyUAD+uC6PE=' // LDAP SHA256 'pass'
 
 /////////////////////////////////////////////////
 // Page-reading feature settings
@@ -217,29 +239,6 @@ $pagereading_config_page = ':config/PageReading';
 // Page name of default pronouncing dictionary, used when converter = 'none'
 $pagereading_config_dict = ':config/PageReading/dict';
 
-
-/////////////////////////////////////////////////
-// Authentication type
-// AUTH_TYPE_NONE, AUTH_TYPE_FORM, AUTH_TYPE_BASIC, AUTH_TYPE_EXTERNAL, ...
-// $auth_type = AUTH_TYPE_FORM;
-// $auth_external_login_url_base = './exlogin.php';
-
-/////////////////////////////////////////////////
-// LDAP
-$ldap_user_account = 0; // (0: Disabled, 1: Enabled)
-// $ldap_server = 'ldap://ldapserver:389';
-// $ldap_base_dn = 'ou=Users,dc=ldap,dc=example,dc=com';
-// $ldap_bind_dn = 'uid=$login,dc=example,dc=com';
-// $ldap_bind_password = '';
-
-/////////////////////////////////////////////////
-// User prefix that shows its auth provider
-$auth_provider_user_prefix_default = 'default:';
-$auth_provider_user_prefix_ldap = 'ldap:';
-$auth_provider_user_prefix_external = 'external:';
-$auth_provider_user_prefix_saml = 'saml:';
-
-
 /////////////////////////////////////////////////
 // User definition
 $auth_users = array(
@@ -247,13 +246,6 @@ $auth_users = array(
 	'foo'	=> 'foo_passwd', // Cleartext
 	'bar'	=> '{x-php-md5}f53ae779077e987718cc285b14dfbe86', // PHP md5() 'bar_passwd'
 	'hoge'	=> '{SMD5}OzJo/boHwM4q5R+g7LCOx2xGMkFKRVEx',      // LDAP SMD5 'hoge_passwd'
-);
-
-// Group definition
-$auth_groups = array(
-	// Groupname => group members(users)
-	'valid-user' => '', // Reserved 'valid-user' group contains all authenticated users
-	'groupfoobar'	=> 'foo,bar',
 );
 
 /////////////////////////////////////////////////
@@ -267,8 +259,7 @@ $auth_method_type	= 'pagename';	// By Page name
 $read_auth = 0;
 
 $read_auth_pages = array(
-	// Regex		   Groupname or Username
-	'#PageForAllValidUsers#'	=> 'valid-user',
+	// Regex		   Username
 	'#HogeHoge#'		=> 'hoge',
 	'#(NETABARE|NetaBare)#'	=> 'foo,bar,hoge',
 );
@@ -291,83 +282,12 @@ $edit_auth_pages = array(
 $search_auth = 0;
 
 /////////////////////////////////////////////////
-// AutoTicketLink
-$ticket_link_sites = array(
-/*
-	array(
-		'key' => 'phpbug',
-		'type' => 'redmine', // type: redmine, jira or git
-		'title' => 'PHP :: Bug #$1',
-		'base_url' => 'https://bugs.php.net/bug.php?id=',
-	),
-	array(
-		'key' => 'asfjira',
-		'type' => 'jira',
-		'title' => 'ASF JIRA [$1]',
-		'base_url' => 'https://issues.apache.org/jira/browse/',
-	),
-	array(
-		'key' => 'pukiwiki-commit',
-		'type' => 'git',
-		'title' => 'PukiWiki revision $1',
-		'base_url' => 'https://ja.osdn.net/projects/pukiwiki/scm/git/pukiwiki/commits/',
-	),
-*/
-);
-// AutoTicketLink - JIRA Default site
-/*
-$ticket_jira_default_site = array(
-	'title' => 'My JIRA - $1',
-	'base_url' => 'https://issues.example.com/jira/browse/',
-);
-//*/
-
-/////////////////////////////////////////////////
-// Show External Link Cushion Page
-// 0: Disabled
-// 1: Enabled
-$external_link_cushion_page = 0;
-$external_link_cushion = array(
-	// Wait N seconds before jumping to an external site
-	'wait_seconds' => 5,
-	// Internal site domain list
-	'internal_domains' => array(
-		'localhost',
-		// '*.example.com',
-	),
-	// Don't show extenal link icons on these domains
-	'silent_external_domains' => array(
-		'pukiwiki.osdn.jp',
-		'pukiwiki.example.com',
-	),
-);
-
-/////////////////////////////////////////////////
-// Show Topicpath title
-// 0: Disabled
-// 1: Enabled
-$topicpath_title = 1;
-
-/////////////////////////////////////////////////
-// Output HTML meta Referrer Policy
-// Value: '' (default), no-referrer, origin, same-origin, ...
-// Reference: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
-$html_meta_referrer_policy = '';
-
-/////////////////////////////////////////////////
-// Output custom HTTP response headers
-$http_response_custom_headers = array(
-	// 'Strict-Transport-Security: max-age=86400',
-	// 'X-Content-Type-Options: nosniff',
-);
-
-/////////////////////////////////////////////////
 // $whatsnew: Max number of RecentChanges
-$maxshow = 500;
+$maxshow = 60;
 
 // $whatsdeleted: Max number of RecentDeleted
 // (0 = Disabled)
-$maxshow_deleted = 200;
+$maxshow_deleted = 60;
 
 /////////////////////////////////////////////////
 // Page names can't be edit via PukiWiki
@@ -421,7 +341,7 @@ define('PKWK_UPDATE_EXEC', '');
 //	' -O ' . $output_dir . ' -L ja -c -K ' . $target);
 
 /////////////////////////////////////////////////
-// HTTP proxy setting
+// HTTP proxy setting (for TrackBack etc)
 
 // Use HTTP proxy server to get remote data
 $use_proxy = 0;
@@ -493,13 +413,6 @@ $non_list = '^\:';
 // Search ignored pages
 $search_non_list = 1;
 
-
-// Page redirect rules
-$page_redirect_rules = array(
-	//'#^FromProject($|(/(.+)$))#' => 'ToProject$1',
-	//'#^FromProject($|(/(.+)$))#' => function($matches) { return 'ToProject' . $matches[1]; },
-);
-
 /////////////////////////////////////////////////
 // Template setting
 
@@ -518,16 +431,11 @@ $preformat_ltrim = 1;
 
 /////////////////////////////////////////////////
 // Convert linebreaks into <br />
-$line_break = 0;
+$line_break = 1;
 
 /////////////////////////////////////////////////
 // Use date-time rules (See rules.ini.php)
 $usedatetime = 1;
-
-/////////////////////////////////////////////////
-// Logging updates (0 or 1)
-$logging_updates = 0;
-$logging_updates_log_dir = '/var/log/pukiwiki';
 
 /////////////////////////////////////////////////
 // User-Agent settings
@@ -632,3 +540,4 @@ $agents = array(
 
 	array('pattern'=>'#^#',	'profile'=>'default'),	// Sentinel
 );
+?>

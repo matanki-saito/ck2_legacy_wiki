@@ -1,8 +1,8 @@
 <?php
 // PukiWiki - Yet another WikiWikiWeb clone.
-// pukiwiki.skin.php
-// Copyright
-//   2002-2017 PukiWiki Development Team
+// $Id: pukiwiki.skin.php,v 1.48 2006/03/07 14:03:02 henoheno Exp $
+// Copyright (C)
+//   2002-2006 PukiWiki Developers Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -12,14 +12,14 @@
 // Settings (define before here, if you want)
 
 // Set site identities
-$_IMAGE['skin']['logo']     = 'pukiwiki.png';
+$_IMAGE['skin']['logo']     = 'ck2_logo.gif';
 $_IMAGE['skin']['favicon']  = ''; // Sample: 'image/favicon.ico';
 
 // SKIN_DEFAULT_DISABLE_TOPICPATH
 //   1 = Show reload URL
 //   0 = Show topicpath
 if (! defined('SKIN_DEFAULT_DISABLE_TOPICPATH'))
-	define('SKIN_DEFAULT_DISABLE_TOPICPATH', 1); // 1, 0
+	define('SKIN_DEFAULT_DISABLE_TOPICPATH', 0); // 1, 0
 
 // Show / Hide navigation bar UI at your choice
 // NOTE: This is not stop their functionalities!
@@ -44,8 +44,11 @@ $link  = & $_LINK;
 $image = & $_IMAGE['skin'];
 $rw    = ! PKWK_READONLY;
 
-// MenuBar
-$menu = arg_check('read') && exist_plugin_convert('menu') ? do_plugin_convert('menu') : FALSE;
+// Decide charset for CSS
+$css_charset = 'iso-8859-1';
+switch(UI_LANG){
+	case 'ja': $css_charset = 'Shift_JIS'; break;
+}
 
 // ------------------------------------------------------------
 // Output
@@ -56,34 +59,41 @@ header('Cache-control: no-cache');
 header('Pragma: no-cache');
 header('Content-Type: text/html; charset=' . CONTENT_CHARSET);
 
+// HTML DTD, <html>, and receive content-type
+if (isset($pkwk_dtd)) {
+	$meta_content_type = pkwk_output_dtd($pkwk_dtd);
+} else {
+	$meta_content_type = pkwk_output_dtd();
+}
+
 ?>
-<!DOCTYPE html>
-<html lang="<?php echo LANG ?>">
 <head>
- <meta http-equiv="Content-Type" content="text/html; charset=<?php echo CONTENT_CHARSET ?>" />
+ <?php echo $meta_content_type ?>
+ <meta http-equiv="content-style-type" content="text/css" />
 <?php if ($nofollow || ! $is_read)  { ?> <meta name="robots" content="NOINDEX,NOFOLLOW" /><?php } ?>
-<?php if ($html_meta_referrer_policy) { ?> <meta name="referrer" content="<?php echo htmlsc(html_meta_referrer_policy) ?>" /><?php } ?>
+<?php if (PKWK_ALLOW_JAVASCRIPT && isset($javascript)) { ?> <meta http-equiv="Content-Script-Type" content="text/javascript" /><?php } ?>
 
  <title><?php echo $title ?> - <?php echo $page_title ?></title>
 
  <link rel="SHORTCUT ICON" href="<?php echo $image['favicon'] ?>" />
- <link rel="stylesheet" type="text/css" href="<?php echo SKIN_DIR ?>pukiwiki.css" />
+ <link rel="stylesheet" type="text/css" media="screen" href="skin/pukiwiki.css.php?charset=<?php echo $css_charset ?>" charset="<?php echo $css_charset ?>" />
+ <link rel="stylesheet" type="text/css" media="print"  href="skin/pukiwiki.css.php?charset=<?php echo $css_charset ?>&amp;media=print" charset="<?php echo $css_charset ?>" />
  <link rel="alternate" type="application/rss+xml" title="RSS" href="<?php echo $link['rss'] ?>" /><?php // RSS auto-discovery ?>
- <script type="text/javascript" src="skin/main.js" defer></script>
- <script type="text/javascript" src="skin/search2.js" defer></script>
+
+<?php if (PKWK_ALLOW_JAVASCRIPT && $trackback_javascript) { ?> <script type="text/javascript" src="skin/trackback.js"></script><?php } ?>
 
 <?php echo $head_tag ?>
 </head>
 <body>
-<?php echo $html_scripting_data ?>
+
 <div id="header">
- <a href="<?php echo $link['top'] ?>"><img id="logo" src="<?php echo IMAGE_DIR . $image['logo'] ?>" width="80" height="80" alt="[PukiWiki]" title="[PukiWiki]" /></a>
+ <a href="<?php echo $link['top'] ?>"><img id="logo" src="<?php echo IMAGE_DIR . $image['logo'] ?>" width="100" height="50" alt="[EUR Wiki]" title="[EUR Wiki]" /></a>
 
  <h1 class="title"><?php echo $page ?></h1>
 
 <?php if ($is_page) { ?>
  <?php if(SKIN_DEFAULT_DISABLE_TOPICPATH) { ?>
-   <a href="<?php echo $link['canonical_url'] ?>"><span class="small"><?php echo $link['canonical_url'] ?></span></a>
+   <a href="<?php echo $link['reload'] ?>"><span class="small"><?php echo $link['reload'] ?></span></a>
  <?php } else { ?>
    <span class="small">
    <?php require_once(PLUGIN_DIR . 'topicpath.inc.php'); echo plugin_topicpath_inline(); ?>
@@ -101,6 +111,7 @@ function _navigator($key, $value = '', $javascript = ''){
 	$link = & $GLOBALS['_LINK'];
 	if (! isset($lang[$key])) { echo 'LANG NOT FOUND'; return FALSE; }
 	if (! isset($link[$key])) { echo 'LINK NOT FOUND'; return FALSE; }
+	if (! PKWK_ALLOW_JAVASCRIPT) $javascript = '';
 
 	echo '<a href="' . $link[$key] . '" ' . $javascript . '>' .
 		(($value === '') ? $lang[$key] : $value) .
@@ -141,23 +152,25 @@ function _navigator($key, $value = '', $javascript = ''){
  | <?php _navigator('search') ?>
  | <?php _navigator('recent') ?>
  | <?php _navigator('help')   ?>
- <?php if ($enable_login) { ?>
- | <?php _navigator('login') ?>
- <?php } ?>
- <?php if ($enable_logout) { ?>
- | <?php _navigator('logout') ?>
- <?php } ?>
  ]
+
+<?php if ($trackback) { ?> &nbsp;
+ [ <?php _navigator('trackback', $lang['trackback'] . '(' . tb_count($_page) . ')',
+ 	($trackback_javascript == 1) ? 'onclick="OpenTrackback(this.href); return false"' : '') ?> ]
+<?php } ?>
+<?php if ($referer)   { ?> &nbsp;
+ [ <?php _navigator('refer') ?> ]
+<?php } ?>
 <?php } // PKWK_SKIN_SHOW_NAVBAR ?>
 </div>
 
 <?php echo $hr ?>
 
-<?php if ($menu !== FALSE) { ?>
+<?php if (arg_check('read') && exist_plugin_convert('menu')) { ?>
 <table border="0" style="width:100%">
  <tr>
   <td class="menubar">
-   <div id="menubar"><?php echo $menu ?></div>
+   <div id="menubar"><?php echo do_plugin_convert('menu') ?></div>
   </td>
   <td valign="top">
    <div id="body"><?php echo $body ?></div>
@@ -266,11 +279,10 @@ function _toolbar($key, $x = 20, $y = 20){
 <?php } ?>
 
 <div id="footer">
- Site admin: <a href="<?php echo $modifierlink ?>"><?php echo $modifier ?></a>
- <p>
+ Site admin: <a href="<?php echo $modifierlink ?>"><?php echo $modifier ?></a><p />
  <?php echo S_COPYRIGHT ?>.
- Powered by PHP <?php echo PHP_VERSION ?>. HTML convert time: <?php echo elapsedtime() ?> sec.
- </p>
+ Powered by PHP <?php echo PHP_VERSION ?>. HTML convert time: <?php echo $taketime ?> sec.
 </div>
+
 </body>
 </html>

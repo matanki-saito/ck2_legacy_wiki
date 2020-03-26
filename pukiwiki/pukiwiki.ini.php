@@ -15,7 +15,7 @@
         define('SPAM_FILTER_NGREG_PLUGIN_NAME', 'comment,pcomment');
         define('SPAM_FILTER_WHITEREG', '/(neohoi2\.sakura\.ne\.jp|google\.(com|co\.jp))/i');
         define('SPAM_FILTER_RECAPTCHA_PUBLICKEY',  getenv('SPAM_FILTER_RECAPTCHA_PUBLICKEY'));
-        define('SPAM_FILTER_RECAPTCHA_PRIVATEKEY', getenv('SPAM_FILTER_RECAPTCHA_PRIVATEKEY')));
+        define('SPAM_FILTER_RECAPTCHA_PRIVATEKEY', getenv('SPAM_FILTER_RECAPTCHA_PRIVATEKEY'));
         define('SPAM_FILTER_CAPTCHA_COND', '#url and (#ipcountry() or #ipdnsbl() or #onlyeng())');
 
 /////////////////////////////////////////////////

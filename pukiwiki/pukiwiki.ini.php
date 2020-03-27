@@ -130,10 +130,10 @@ $page_title = 'CK2 Wiki';
 //$script_directory_index = 'index.php';
 
 // Site admin's name (CHANGE THIS)
-$modifier = 'ck2 wiki admin';
+$modifier = 'CK2 Discord';
 
 // Site admin's Web page (CHANGE THIS)
-$modifierlink = 'http://example.com';
+$modifierlink = 'https://discord.gg/Avh4Crs';
 
 // Default page name
 $defaultpage  = 'FrontPage';     // Top / Default page

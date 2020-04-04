@@ -49,6 +49,16 @@ function pkwk_discord_notify($message, $footer = array()){
 	                    "name" => "REMOTE_ADDR",
 	                    "value" => $_SERVER['REMOTE_ADDR'],
 	                    "inline" => false
+					],
+					[
+	                    "name" => "X-Real-IP",
+	                    "value" => $_SERVER['HTTP_X_REAL_IP'],
+	                    "inline" => false
+					],
+					[
+	                    "name" => "X-Forwarded-For",
+	                    "value" => $_SERVER['HTTP_X_FORWARDED_FOR'],
+	                    "inline" => false
 	                ]
 	            ]
 	        ]

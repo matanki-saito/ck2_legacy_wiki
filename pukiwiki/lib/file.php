@@ -327,7 +327,7 @@ function file_head($file, $count = 1, $lock = TRUE, $buffer = 8192)
 // Output to a file
 function file_write($dir, $page, $str, $notimestamp = FALSE, $is_delete = FALSE)
 {
-	global $_msg_invalidiwn, $notify, $notify_diff_only, $notify_subject;
+    global $_msg_invalidiwn, $notify, $notify_diff_only, $notify_subject, $notify_discord, $notify_discord_diff_only;
 	global $whatsdeleted, $maxshow_deleted;
 
 	if (PKWK_READONLY) return; // Do nothing
@@ -404,6 +404,13 @@ function file_write($dir, $page, $str, $notimestamp = FALSE, $is_delete = FALSE)
 		$footer['REMOTE_ADDR'] = TRUE;
 		pkwk_mail_notify($notify_subject, $str, $footer) or
 			die('pkwk_mail_notify(): Failed');
+	} else if ($dir == DIFF_DIR && $notify_discord) {
+		if ($notify_discord_diff_only) $str = preg_replace('/^[^-+].*\n/m', '', $str);
+		$footer['ACTION'] = 'Page update';
+		$footer['PAGE']   = $page;
+		$footer['URI']    = get_page_uri($page, PKWK_URI_ABSOLUTE);
+		pkwk_discord_notify($str, $footer) or
+			die('pkwk_discord_notify(): Failed');
 	}
 	if ($dir === DIFF_DIR) {
 		pkwk_log_updates($page, $str);

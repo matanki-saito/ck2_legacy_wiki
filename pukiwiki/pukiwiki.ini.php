@@ -387,6 +387,13 @@ $notify_subject = '[PukiWiki] $page';
 // NOTE: Multiple items must be divided by "\r\n", not "\n".
 $notify_header = '';
 
+////////////////////////////////////////////////
+// Notify you via dicrod
+
+$notify_discord = 1;
+$notify_discord_channel_url = getenv('NOTIFY_DISCORD_CHANNEL_URL');
+$notify_discord_diff_only = 1;
+
 /////////////////////////////////////////////////
 // Mail: POP / APOP Before SMTP
 

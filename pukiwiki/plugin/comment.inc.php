@@ -36,6 +36,8 @@ function plugin_comment_action()
 		$vars['msg'] = & $match[2];
 	}
 	if ($vars['msg'] == '') return array('msg'=>'', 'body'=>''); // Do nothing
+	if (preg_match('/.*http.*/i',$vars['msg'])) return array('msg'=>'', 'body'=>''); // Do nothing
+	if (preg_match('/.*http.*/i',$head)) return array('msg'=>'', 'body'=>''); // Do nothing
 
 	$comment  = str_replace('$msg', $vars['msg'], PLUGIN_COMMENT_FORMAT_MSG);
 	if(isset($vars['name']) || ($vars['nodate'] != '1')) {

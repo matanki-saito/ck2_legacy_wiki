@@ -36,6 +36,8 @@ function plugin_comment_action()
 		$vars['msg'] = & $match[2];
 	}
 	if ($vars['msg'] == '') return array('msg'=>'', 'body'=>''); // Do nothing
+
+	if (preg_match('/.*http.*/i',$vars['name'])) return array('msg'=>'', 'body'=>''); // Do nothing
 	if (preg_match('/.*http.*/i',$vars['msg'])) return array('msg'=>'', 'body'=>''); // Do nothing
 	if (preg_match('/.*http.*/i',$head)) return array('msg'=>'', 'body'=>''); // Do nothing
 

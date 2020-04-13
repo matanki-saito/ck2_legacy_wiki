@@ -217,7 +217,7 @@ function plugin_edit_write()
     $result = json_decode($body,true);     
     curl_close($ch);
 
-    if($result['score'] < $re_captcha_v3_threshold){
+    if($result['success'] == false || $result['score'] < $re_captcha_v3_threshold){
         header('Location: ' . get_page_uri($page, PKWK_URI_ROOT));
         exit;
     }

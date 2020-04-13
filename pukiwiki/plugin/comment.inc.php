@@ -39,7 +39,7 @@ function plugin_comment_action()
     $body = substr($response, $header_size);
     $result = json_decode($body,true);     
     curl_close($ch);
-    if($result['score'] < $re_captcha_v3_threshold){
+    if($result['success'] == false || $result['score'] < $re_captcha_v3_threshold){
         return array('msg'=>'', 'body'=>'');
     }
 

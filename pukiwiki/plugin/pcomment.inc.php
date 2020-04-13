@@ -44,9 +44,29 @@ define('PLUGIN_PCOMMENT_FORMAT_STRING',
 
 function plugin_pcomment_action()
 {
-	global $vars;
+    global $vars,$re_captcha_v3_secret,$re_captcha_v3_threshold;
 
 	if (PKWK_READONLY) die_message('PKWK_READONLY prohibits editing');
+
+    if (preg_match('/.*http.*/i',$vars['msg'])) return array('msg'=>'', 'body'=>''); // Do nothing
+    if (preg_match('/.*http.*/i',$vars['name'])) return array('msg'=>'', 'body'=>''); // Do nothing
+
+    // check reCapcha
+    $ch = curl_init( 'https://www.google.com/recaptcha/api/siteverify?secret='.$re_captcha_v3_secret."&response=". $vars['reCapchaToken'] );
+    curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST');
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    $response = curl_exec($ch);
+    $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); 
+    $header = substr($response, 0, $header_size);
+    $body = substr($response, $header_size);
+    $result = json_decode($body,true);     
+    curl_close($ch);
+    if($result['score'] < $re_captcha_v3_threshold){
+        header('Location: ' . get_page_uri($page, PKWK_URI_ROOT));
+        exit;
+    }    
 
 	if (! isset($vars['msg']) || $vars['msg'] == '') return array();
 	$refer = isset($vars['refer']) ? $vars['refer'] : '';
@@ -144,7 +164,7 @@ function plugin_pcomment_convert()
   <input type="hidden" name="dir"    value="$dir" />
   <input type="hidden" name="count"  value="$count" />
   $radio $title $name $comment
-  <input type="submit" value="{$_pcmt_messages['btn_comment']}" />
+  <input type="button" name="pcomment" value="{$_pcmt_messages['btn_comment']}" />
   </div>
 EOD;
 		$form_end = '</form>' . "\n";

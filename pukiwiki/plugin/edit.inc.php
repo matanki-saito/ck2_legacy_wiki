@@ -198,10 +198,29 @@ function plugin_edit_write()
 	global $vars;
 	global $_title_collided, $_msg_collided_auto, $_msg_collided, $_title_deleted;
 	global $notimeupdate, $_msg_invalidpass, $do_update_diff_table;
+    global $re_captcha_v3_secret,$re_captcha_v3_threshold;
 
 	$page   = isset($vars['page'])   ? $vars['page']   : '';
 	$add    = isset($vars['add'])    ? $vars['add']    : '';
 	$digest = isset($vars['digest']) ? $vars['digest'] : '';
+
+    // check reCapcha
+    $ch = curl_init( 'https://www.google.com/recaptcha/api/siteverify?secret='.$re_captcha_v3_secret."&response=". $vars['reCapchaToken'] );
+    curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST');
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    $response = curl_exec($ch);
+    $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); 
+    $header = substr($response, 0, $header_size);
+    $body = substr($response, $header_size);
+    $result = json_decode($body,true);     
+    curl_close($ch);
+
+    if($result['score'] < $re_captcha_v3_threshold){
+        header('Location: ' . get_page_uri($page, PKWK_URI_ROOT));
+        exit;
+    }
 
 	$vars['msg'] = preg_replace(PLUGIN_EDIT_FREEZE_REGEX, '', $vars['msg']);
 	$msg = & $vars['msg']; // Reference

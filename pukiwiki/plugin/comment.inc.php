@@ -23,8 +23,25 @@ function plugin_comment_action()
 	global $vars, $now, $_title_updated, $_no_name;
 	global $_msg_comment_collided, $_title_comment_collided;
 	global $_comment_plugin_fail_msg;
+    global $re_captcha_v3_secret,$re_captcha_v3_threshold;
 
 	if (PKWK_READONLY) die_message('PKWK_READONLY prohibits editing');
+
+    // check reCaptcha
+    $ch = curl_init( 'https://www.google.com/recaptcha/api/siteverify?secret='.$re_captcha_v3_secret."&response=". $vars['reCapchaToken'] );
+    curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST');
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    $response = curl_exec($ch);
+    $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE); 
+    $header = substr($response, 0, $header_size);
+    $body = substr($response, $header_size);
+    $result = json_decode($body,true);     
+    curl_close($ch);
+    if($result['score'] < $re_captcha_v3_threshold){
+        return array('msg'=>'', 'body'=>'');
+    }
 
 	if (! isset($vars['msg'])) return array('msg'=>'', 'body'=>''); // Do nothing
 
@@ -133,7 +150,7 @@ function plugin_comment_convert()
   <input type="hidden" name="digest" value="$digest" />
   $nametags
   <input type="text"   name="msg" id="_p_comment_comment_{$comment_no}" size="$comment_cols" />
-  <input type="submit" name="comment" value="$_btn_comment" />
+  <input type="button" name="comment" value="$_btn_comment" />
  </div>
 </form>
 EOD;

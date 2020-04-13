@@ -82,6 +82,56 @@ if (isset($pkwk_dtd)) {
 
 <?php if (PKWK_ALLOW_JAVASCRIPT && $trackback_javascript) { ?> <script type="text/javascript" src="skin/trackback.js"></script><?php } ?>
 
+<script src="https://www.google.com/recaptcha/api.js?render=<?php echo RE_CAPTCHA_V3_USER; ?>"></script>
+<script>
+
+function onSubmit(event){
+  const formElement = this.form;
+  const target = event.target;
+
+  //ここに送信ボタンの二重押下制御処理を記載
+  grecaptcha.ready(function() {
+    try{
+      grecaptcha.execute('<?php echo RE_CAPTCHA_V3_USER; ?>', {action: 'homepage'})
+      .then(function(token) {
+        //トークン取得が成功した場合
+        //ここに、formのhiddenなどにtokenを格納する処理を記載
+        const q = document.createElement('input');
+        q.type= 'hidden';
+        q.value = token;
+        q.name = 'reCapchaToken';
+        formElement.appendChild(q);
+
+        const m = document.createElement('input');
+        m.type= 'hidden';
+        m.value = target.value;
+        m.name = target.name;
+        formElement.appendChild(m);
+
+        formElement.submit(); //実際にサーバーに送信
+      }, function(reason) {
+        //トークン取得が失敗した場合（then関数のエラー処理、現状reasonは返されない）
+        //ここにエラー処理を記載（メッセージを表示し送信ボタンの押下制御を戻す）
+        console.log("reCapcha token error");
+      });
+    }catch(e){
+      //ここにエラー処理を記載（メッセージを表示し送信ボタンの押下制御を戻す）
+      console.log("reCapcha token error. Please reflesh page");
+    }
+  });
+}
+
+window.addEventListener('load', function() {
+  var w= document.getElementsByTagName('input');
+  for(var i=0;i<w.length;i++){
+    if(w[i].type === 'button' && (w[i].name === 'write' || w[i].name === 'comment' || w[i].name === 'pcomment')){
+      w[i].addEventListener('click', onSubmit, false);
+    }
+  }
+})
+
+</script>
+
 <?php echo $head_tag ?>
 </head>
 <body>

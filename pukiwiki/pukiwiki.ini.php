@@ -209,6 +209,11 @@ $adminpass = getenv('ADMIN_PASS');
 //$adminpass = '{MD5}Gh3JHJBzJcaScd3wyUS8cg==';               // LDAP MD5   'pass'
 //$adminpass = '{SMD5}o7lTdtHFJDqxFOVX09C8QnlmYmZnd2Qx';      // LDAP SMD5  'pass'
 
+// reCAPTCHA v3
+define('RE_CAPTCHA_V3_USER', getenv('RE_CAPTCHA_V3_USER'));
+$re_captcha_v3_secret = getenv('RE_CAPTCHA_V3_SECRET');
+$re_captcha_v3_threshold = floatval(getenv('RE_CAPTCHA_V3_THRESHOLD'));
+
 /////////////////////////////////////////////////
 // Page-reading feature settings
 // (Automatically creating pronounce datas, for Kanji-included page names,

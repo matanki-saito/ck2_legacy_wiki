@@ -101,9 +101,58 @@ function get_filename($page)
 	return DATA_DIR . encode($page) . '.txt';
 }
 
+function download_deny_ip_file($filename){
+    $fp = fopen("http://www.vpngate.net/api/iphone/", 'r');
+    $fpw = fopen($filename, 'w');
+    $size = 0;
+    
+    while (!feof($fp)) {
+        $buffer = fread($fp, 1024);
+        if ($buffer === false) {
+            $size = false;
+            break;
+        }
+ 
+        $wsize = fwrite($fpw, $buffer);
+        if ($wsize === false) {
+            $size = false;
+            break;
+        }
+ 
+        $size += $wsize;
+    }
+ 
+    fclose($fp);
+    fclose($fpw);
+    return $size;
+}
+
+// check IP
+function deny_outrange_ip($ip){
+
+	$file_name = CACHE_DIR . 'deny_ips.csv';
+
+	// ファイルがないか、5分以上古ければIPリストを更新
+	if (!file_exists($file_name) || (filemtime($file_name) < (time() - 300))) {
+		download_deny_ip_file($file_name);
+	}
+
+	$handle = fopen($file_name, "r");
+	
+	$ips = array();
+	while (($data = fgetcsv($handle)) !== FALSE) {
+		array_push($ips,$data[1]);
+	}
+
+	return in_array($ip,$ips);
+}
+
+
 // Put a data(wiki text) into a physical file(diff, backup, text)
 function page_write($page, $postdata, $notimestamp = FALSE)
 {
+	if(deny_outrange_ip($_SERVER['HTTP_X_REAL_IP'])) return; // Do nothing
+
 	if (PKWK_READONLY) return; // Do nothing
 
     if (preg_match('/.*Windows NT 6.1.*/i',$_SERVER['HTTP_USER_AGENT'])) return;// Do nothing

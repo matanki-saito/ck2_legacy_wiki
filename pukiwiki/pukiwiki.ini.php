@@ -80,14 +80,29 @@ define('UI_LANG', LANG); // 'en' for Internationalized wikisite
 // You may hide these directories (from web browsers)
 // by setting DATA_HOME at index.php.
 
-define('DATA_DIR',      DATA_HOME . 'wiki/'     ); // Latest wiki texts
-define('DIFF_DIR',      DATA_HOME . 'diff/'     ); // Latest diffs
-define('BACKUP_DIR',    DATA_HOME . 'backup/'   ); // Backups
-define('CACHE_DIR',     DATA_HOME . 'cache/'    ); // Some sort of caches
-define('UPLOAD_DIR',    DATA_HOME . 'attach/'   ); // Attached files and logs
-define('COUNTER_DIR',   DATA_HOME . 'counter/'  ); // Counter plugin's counts
-define('TRACKBACK_DIR', DATA_HOME . 'trackback/'); // TrackBack logs
+define('DATA_DIR',      DATA_HOME . 'wikidata/wiki/'     ); // Latest wiki texts
+define('DIFF_DIR',      DATA_HOME . 'wikidata/diff/'     ); // Latest diffs
+define('BACKUP_DIR',    DATA_HOME . 'wikidata/backup/'   ); // Backups
+define('CACHE_DIR',     DATA_HOME . 'wikidata/cache/'    ); // Some sort of caches
+define('UPLOAD_DIR',    DATA_HOME . 'wikidata/attach/'   ); // Attached files and logs
+define('COUNTER_DIR',   DATA_HOME . 'wikidata/counter/'  ); // Counter plugin's counts
+define('TRACKBACK_DIR', DATA_HOME . 'wikidata/trackback/'); // TrackBack logs
 define('PLUGIN_DIR',    DATA_HOME . 'plugin/'   ); // Plugin directory
+
+function makeDirIfNotExist($dir){
+	if(!file_exists($dir)){
+		mkdir($dir,0777,true);
+		chmod($dir, 0777);
+	}
+}
+
+makeDirIfNotExist(DATA_DIR);
+makeDirIfNotExist(DIFF_DIR);
+makeDirIfNotExist(BACKUP_DIR);
+makeDirIfNotExist(CACHE_DIR);
+makeDirIfNotExist(UPLOAD_DIR);
+makeDirIfNotExist(COUNTER_DIR);
+makeDirIfNotExist(TRACKBACK_DIR);
 
 /////////////////////////////////////////////////
 // Directory settings II (ended with '/')

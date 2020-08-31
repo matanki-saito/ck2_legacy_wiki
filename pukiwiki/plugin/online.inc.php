@@ -32,8 +32,8 @@ function plugin_online_itself($type = 0)
 	static $count, $result, $base;
 
 	if (! isset($count)) {
-		if (isset($_SERVER['REMOTE_ADDR'])) {
-			$host  = & $_SERVER['REMOTE_ADDR'];
+		if (isset($_SERVER['HTTP_X_REAL_IP'])) {
+			$host  = & $_SERVER['HTTP_X_REAL_IP'];
 		} else {
 			$host  = '';
 		}

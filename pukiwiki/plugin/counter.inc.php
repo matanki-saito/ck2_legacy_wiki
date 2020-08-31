@@ -147,7 +147,7 @@ function plugin_counter_get_count($page)
 	}
 
 	// Anothoer day?
-	$remote_addr = $_SERVER['REMOTE_ADDR'];
+	$remote_addr = $_SERVER['HTTP_X_REAL_IP'];
 	$count_up = FALSE;
 	if ($c['date'] != $default['date']) {
 		$modify = TRUE;

@@ -27,7 +27,7 @@ function pkwk_discord_notify($message, $footer = array()){
 	            "type" => "rich",
 
 	            // Embed Description
-	            "description" => substr($message,0,150),
+	            "description" => substr($message,0,300),
 
 	            // URL of title link
 	            "url" => $footer['URI'],

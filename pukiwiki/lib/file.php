@@ -163,7 +163,7 @@ function page_write($page, $postdata, $notimestamp = FALSE)
 				$footer['ACTION'] = 'reject';
 				$footer['PAGE']   = $page;
 				$footer['URI']    = get_page_uri($page, PKWK_URI_ABSOLUTE);
-				pkwk_discord_notify($str, $notify_discord_channel_url_failed, $footer,) or
+				pkwk_discord_notify($str, $notify_discord_channel_url_failed, $footer) or
 					die('pkwk_discord_notify(): Failed');
 			}
 

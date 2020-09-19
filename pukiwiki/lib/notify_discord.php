@@ -1,8 +1,6 @@
 <?php
 
-function pkwk_discord_notify($message, $footer = array()){
-
-	global $notify_discord_channel_url;
+function pkwk_discord_notify($message,$webhook_url, $footer = array()){
 
 	$timestamp = date("c", strtotime("now"));
 
@@ -21,43 +19,43 @@ function pkwk_discord_notify($message, $footer = array()){
 	    "embeds" => [
 	        [
 	            // Embed Title
-	            "title" => $footer['PAGE'],
+	            "title" => substr($footer['PAGE'] != null ? $footer['PAGE'] : 'undefined' ,0,50),
 
 	            // Embed Type
 	            "type" => "rich",
 
 	            // Embed Description
-	            "description" => substr($message,0,300),
+	            "description" => substr($message != null ? $message : 'undefined',0,300),
 
 	            // URL of title link
-	            "url" => $footer['URI'],
+	            "url" => substr($footer['URI'] != null ? $footer['URI'] : 'undefined',0,300),
 
 	            // Timestamp of embed must be formatted as ISO8601
 	            "timestamp" => $timestamp,
 
 	            // Embed left border color in HEX
-	            "color" => hexdec( "b51414" ),
+	            "color" => hexdec( "3366ff" ),
 
 	            // Additional Fields array
 	            "fields" => [
 	                [
 	                    "name" => "USER_AGENT",
-	                    "value" => $_SERVER['HTTP_USER_AGENT'],
+	                    "value" => $_SERVER['HTTP_USER_AGENT'] != null ? $_SERVER['HTTP_USER_AGENT'] : 'undefined',
 	                    "inline" => false
 	                ],
 	                [
 	                    "name" => "REMOTE_ADDR",
-	                    "value" => $_SERVER['REMOTE_ADDR'],
+	                    "value" => $_SERVER['REMOTE_ADDR'] != null ? $_SERVER['REMOTE_ADDR'] : 'undefined',
 	                    "inline" => false
 					],
 					[
 	                    "name" => "X-Real-IP",
-	                    "value" => $_SERVER['HTTP_X_REAL_IP'],
+	                    "value" => $_SERVER['HTTP_X_REAL_IP'] != null ? $_SERVER['HTTP_X_REAL_IP'] : 'undefined',
 	                    "inline" => false
 					],
 					[
 	                    "name" => "X-Forwarded-For",
-	                    "value" => $_SERVER['HTTP_X_FORWARDED_FOR'],
+	                    "value" => $_SERVER['HTTP_X_FORWARDED_FOR'] != null ? $_SERVER['HTTP_X_FORWARDED_FOR'] : 'undefined',
 	                    "inline" => false
 	                ]
 	            ]
@@ -67,7 +65,7 @@ function pkwk_discord_notify($message, $footer = array()){
 	], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 
 
-	$ch = curl_init( $notify_discord_channel_url );
+	$ch = curl_init( $webhook_url );
 	curl_setopt( $ch, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
 	curl_setopt( $ch, CURLOPT_POST, 1);
 	curl_setopt( $ch, CURLOPT_POSTFIELDS, $json_data);

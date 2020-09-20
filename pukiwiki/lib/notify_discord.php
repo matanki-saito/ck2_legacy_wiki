@@ -62,7 +62,7 @@ function pkwk_discord_notify($message,$webhook_url, $footer = array()){
 	        ]
 	    ]
 
-	], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+	], JSON_INVALID_UTF8_IGNORE | JSON_INVALID_UTF8_SUBSTITUTE );
 
 
 	$ch = curl_init( $webhook_url );

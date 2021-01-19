@@ -651,3 +651,25 @@ td.vote_td2 {
 	color:inherit;
 	background-color:#EEF5FF;
 }
+
+div.divregion{
+  background-color: #FFFFFF;
+	color:gray;
+	border:gray 2px solid;
+	padding-left: 2px;
+	width:300px;
+}
+div.divregion_contents{
+	border-bottom: solid 1px #666e99;
+	border-left: solid 5px #666e99;
+	padding-left: 10px;
+}
+div.divregion_h1{
+	color:white;
+	background-color:#666e99;
+	padding:1px 4px;
+}
+div.divregion_h2{
+	border-bottom: solid 1px #666e99;
+	border-left: solid 10px #666e99;
+}

@@ -150,7 +150,7 @@ function deny_outrange_ip($ip){
 // Put a data(wiki text) into a physical file(diff, backup, text)
 function page_write($page, $postdata, $notimestamp = FALSE)
 {
-	global $notify_discord, $notify_discord_diff_only, $notify_discord_channel_url_failed;
+	global $notify_discord, $notify_discord_diff_only, $notify_discord_channel_url_failed, $notify_discord_crypt_ip_salt;
 
 	if (PKWK_READONLY) return; // Do nothing
 
@@ -163,7 +163,7 @@ function page_write($page, $postdata, $notimestamp = FALSE)
 				$footer['ACTION'] = 'reject';
 				$footer['PAGE']   = $page;
 				$footer['URI']    = get_page_uri($page, PKWK_URI_ABSOLUTE);
-				pkwk_discord_notify($str, $notify_discord_channel_url_failed, $footer) or
+				pkwk_discord_notify($str, $notify_discord_channel_url_failed, $footer, $notify_discord_crypt_ip_salt) or
 					die('pkwk_discord_notify(): Failed');
 			}
 
@@ -391,7 +391,7 @@ function file_head($file, $count = 1, $lock = TRUE, $buffer = 8192)
 // Output to a file
 function file_write($dir, $page, $str, $notimestamp = FALSE, $is_delete = FALSE)
 {
-	global $_msg_invalidiwn, $notify, $notify_diff_only, $notify_subject, $notify_discord, $notify_discord_diff_only;
+	global $_msg_invalidiwn, $notify, $notify_diff_only, $notify_subject, $notify_discord, $notify_discord_diff_only, $notify_discord_crypt_ip_salt;
 	global $whatsdeleted, $maxshow_deleted;
 	global $notify_discord_channel_url_success;
 
@@ -474,7 +474,7 @@ function file_write($dir, $page, $str, $notimestamp = FALSE, $is_delete = FALSE)
 		$footer['ACTION'] = 'Page update';
 		$footer['PAGE']   = $page;
 		$footer['URI']    = get_page_uri($page, PKWK_URI_ABSOLUTE);
-		pkwk_discord_notify($str, $notify_discord_channel_url_success, $footer) or
+		pkwk_discord_notify($str, $notify_discord_channel_url_success, $footer, $notify_discord_crypt_ip_salt) or
 			die('pkwk_discord_notify(): Failed');
 	}
 	if ($dir === DIFF_DIR) {

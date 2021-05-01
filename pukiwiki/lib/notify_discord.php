@@ -1,6 +1,6 @@
 <?php
 
-function pkwk_discord_notify($message,$webhook_url, $footer = array()){
+function pkwk_discord_notify($message,$webhook_url, $footer = array(), $salt){
 
 	$timestamp = date("c", strtotime("now"));
 
@@ -40,22 +40,22 @@ function pkwk_discord_notify($message,$webhook_url, $footer = array()){
 	            "fields" => [
 	                [
 	                    "name" => "USER_AGENT",
-	                    "value" => $_SERVER['HTTP_USER_AGENT'] != null ? $_SERVER['HTTP_USER_AGENT'] : 'undefined',
+	                    "value" => $_SERVER['HTTP_USER_AGENT'] != null ? crypt($_SERVER['HTTP_USER_AGENT'], $salt) : 'undefined',
 	                    "inline" => false
 	                ],
 	                [
 	                    "name" => "REMOTE_ADDR",
-	                    "value" => $_SERVER['REMOTE_ADDR'] != null ? $_SERVER['REMOTE_ADDR'] : 'undefined',
+	                    "value" => $_SERVER['REMOTE_ADDR'] != null ? crypt($_SERVER['REMOTE_ADDR'], $salt) : 'undefined',
 	                    "inline" => false
 					],
 					[
 	                    "name" => "X-Real-IP",
-	                    "value" => $_SERVER['HTTP_X_REAL_IP'] != null ? $_SERVER['HTTP_X_REAL_IP'] : 'undefined',
+	                    "value" => $_SERVER['HTTP_X_REAL_IP'] != null ? crypt($_SERVER['HTTP_X_REAL_IP'], $salt) : 'undefined',
 	                    "inline" => false
 					],
 					[
 	                    "name" => "X-Forwarded-For",
-	                    "value" => $_SERVER['HTTP_X_FORWARDED_FOR'] != null ? $_SERVER['HTTP_X_FORWARDED_FOR'] : 'undefined',
+	                    "value" => $_SERVER['HTTP_X_FORWARDED_FOR'] != null ? crypt($_SERVER['HTTP_X_FORWARDED_FOR'], $salt) : 'undefined',
 	                    "inline" => false
 	                ]
 	            ]

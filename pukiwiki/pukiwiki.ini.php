@@ -413,6 +413,7 @@ $notify_header = '';
 $notify_discord = 1;
 $notify_discord_channel_url_success = getenv('NOTIFY_DISCORD_CHANNEL_URL_SUCCESS');
 $notify_discord_channel_url_failed = getenv('NOTIFY_DISCORD_CHANNEL_URL_FAILED');
+$notify_discord_crypt_ip_salt = getenv('NOTIFY_DISCORD_CRYPT_IP_SALT');
 $notify_discord_diff_only = 1;
 
 /////////////////////////////////////////////////

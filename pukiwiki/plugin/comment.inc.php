@@ -28,7 +28,7 @@ function plugin_comment_action()
 	if (PKWK_READONLY) die_message('PKWK_READONLY prohibits editing');
 
 	// check reCaptcha
-	$ch = curl_init( 'https://www.google.com/recaptcha/api/siteverify?secret='.$re_captcha_v3_secret."&response=". $vars['reCapchaToken'] . "&remoteip=" . $_SERVER['HTTP_X_REAL_IP']);
+	$ch = curl_init( 'https://www.google.com/recaptcha/api/siteverify?secret='.$re_captcha_v3_secret."&response=". $vars['reCapchaToken'] . "&remoteip=" . $_SERVER['HTTP_X_FORWARDED_FOR']);
 	curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST');
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 	curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );

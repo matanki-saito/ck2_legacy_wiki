@@ -32,8 +32,8 @@ function plugin_online_itself($type = 0)
 	static $count, $result, $base;
 
 	if (! isset($count)) {
-		if (isset($_SERVER['HTTP_X_REAL_IP'])) {
-			$host  = & $_SERVER['HTTP_X_REAL_IP'];
+		if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+			$host  = & $_SERVER['HTTP_X_FORWARDED_FOR'];
 		} else {
 			$host  = '';
 		}

@@ -68,7 +68,7 @@ jobs:
           curl \
           -X POST \
           -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
           https://api.github.com/repos/matanki-saito/localservers/actions/workflows/update.yaml/dispatches \
           -d "{\"ref\":\"main\", \"inputs\": { \"source\":\"wikis/ck2wiki/deployment.yaml\", \"target\":\"spec.template.spec.containers.0.image\", \"value\":\"gnagaoka/ck2_legacy_wiki:${{ steps.tag_version.outputs.new_tag }}\"}}"
       

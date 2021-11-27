@@ -1,6 +1,10 @@
 name: Docker
 
 on:
+  push:
+    branches:
+      - main
+      - master
   repository_dispatch:
     types: [publish]
   workflow_dispatch:

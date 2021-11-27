@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone
 // comment.inc.php
 // Copyright
-//   2002-2017 PukiWiki Development Team
+//   2002-2020 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -140,7 +140,7 @@ function plugin_comment_convert()
 	$s_page = htmlsc($page);
 	$string = <<<EOD
 <br />
-<form action="$script" method="post">
+<form action="$script" method="post" class="_p_comment_form">
  <div>
   <input type="hidden" name="plugin" value="comment" />
   <input type="hidden" name="refer"  value="$s_page" />
@@ -149,8 +149,8 @@ function plugin_comment_convert()
   <input type="hidden" name="above"  value="$above" />
   <input type="hidden" name="digest" value="$digest" />
   $nametags
-  <input type="text"   name="msg" id="_p_comment_comment_{$comment_no}" size="$comment_cols" />
-  <input type="button" name="comment" value="$_btn_comment" />
+  <input type="text"   name="msg" id="_p_comment_comment_{$comment_no}"
+   size="$comment_cols" required />
  </div>
 </form>
 EOD;

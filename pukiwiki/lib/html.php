@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone.
 // html.php
 // Copyright
-//   2002-2019 PukiWiki Development Team
+//   2002-2020 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -227,6 +227,7 @@ function get_html_scripting_data($page, $in_editing)
 	global $external_link_cushion_page, $external_link_cushion;
 	global $topicpath_title;
 	global $ticket_jira_default_site;
+	global $show_passage;
 	if (!isset($ticket_link_sites) || !is_array($ticket_link_sites)) {
 		return '';
 	}
@@ -240,10 +241,12 @@ function get_html_scripting_data($page, $in_editing)
 EOS;
 		return $empty_data;
 	}
+	$is_show_passage = (bool)($show_passage !== 0);
 	// Site basic Properties
 	$props = array(
 		'is_utf8' => $is_utf8,
 		'json_enabled' => $json_enabled,
+		'show_passage' => $is_show_passage,
 		'base_uri_pathname' => get_base_uri(PKWK_URI_ROOT),
 		'base_uri_absolute' => get_base_uri(PKWK_URI_ABSOLUTE)
 	);
@@ -303,7 +306,8 @@ EOS;
 	}
 	// Topicpath title
 	$topicpath_data = '';
-	if ($topicpath_title && exist_plugin('topicpath')) {
+	if ($topicpath_title && exist_plugin('topicpath') &&
+		function_exists('plugin_topicpath_parent_links')) {
 		$parents = plugin_topicpath_parent_links($page);
 		$h_topicpath = htmlsc_json($parents);
 		$topicpath_data = <<<EOS
@@ -409,7 +413,7 @@ EOD;
 	$h_msg_edit_unloadbefore_message = htmlsc($_msg_edit_unloadbefore_message);
 	$body = <<<EOD
 <div class="edit_form">
- <form action="$script" method="post" class="_plugin_edit_edit_form" style="margin-bottom:0px;">
+ <form action="$script" method="post" class="_plugin_edit_edit_form" style="margin-bottom:0;">
 $template
   $addtag
   <input type="hidden" name="cmd"    value="edit" />
@@ -427,7 +431,7 @@ $template
   </div>
   <textarea name="original" rows="1" cols="1" style="display:none">$s_original</textarea>
  </form>
- <form action="$script" method="post" class="_plugin_edit_cancel" style="margin-top:0px;">
+ <form action="$script" method="post" class="_plugin_edit_cancel" style="margin-top:0;">
   <input type="hidden" name="cmd"    value="edit" />
   <input type="hidden" name="page"   value="$s_page" />
   <input type="submit" name="cancel" value="$_btn_cancel" accesskey="c" />
@@ -555,13 +559,18 @@ function strip_htmltag($str, $all = TRUE)
 	global $_symbol_noexists;
 	static $noexists_pattern;
 
-	if (! isset($noexists_pattern))
-		$noexists_pattern = '#<span class="noexists">([^<]*)<a[^>]+>' .
-			preg_quote($_symbol_noexists, '#') . '</a></span>#';
-
-	// Strip Dagnling-Link decoration (Tags and "$_symbol_noexists")
-	$str = preg_replace($noexists_pattern, '$1', $str);
-
+	if (! isset($noexists_pattern)) {
+		if ($_symbol_noexists != '') {
+			$noexists_pattern = '#<span class="noexists">([^<]*)<a[^>]+>' .
+				preg_quote($_symbol_noexists, '#') . '</a></span>#';
+		} else {
+			$noexists_pattern = '';
+		}
+	}
+	if ($noexists_pattern != '') {
+		// Strip Dagnling-Link decoration (Tags and "$_symbol_noexists")
+		$str = preg_replace($noexists_pattern, '$1', $str);
+	}
 	if ($all) {
 		// All other HTML tags
 		return preg_replace('#<[^>]+>#',        '', $str);

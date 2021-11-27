@@ -1,7 +1,7 @@
 <?php
 // PukiWiki - Yet another WikiWikiWeb clone
 // pcomment.inc.php
-// Copyright 2002-2017 PukiWiki Development Team
+// Copyright 2002-2020 PukiWiki Development Team
 // License: GPL v2 or (at your option) any later version
 //
 // pcomment plugin - Show/Insert comments into specified (another) page
@@ -146,14 +146,16 @@ function plugin_pcomment_convert()
 
 		$radio   = $params['reply'] ?
 			'<input type="radio" name="reply" value="0" tabindex="0" checked="checked" />' : '';
-		$comment = '<input type="text" name="msg" size="' . PLUGIN_PCOMMENT_SIZE_MSG . '" />';
+		$comment = '<input type="text" name="msg" size="' .
+			PLUGIN_PCOMMENT_SIZE_MSG . '" required />';
 
 		$s_page   = htmlsc($page);
 		$s_refer  = htmlsc($vars_page);
 		$s_nodate = htmlsc($params['nodate']);
 		$s_count  = htmlsc($count);
 
-		$form_start = '<form action="' . get_base_uri() . '" method="post">' . "\n";
+		$form_start = '<form action="' . get_base_uri() .
+			'" method="post" class="_p_pcomment_form">' . "\n";
 		$form = <<<EOD
   <div>
   <input type="hidden" name="digest" value="$digest" />
@@ -164,7 +166,7 @@ function plugin_pcomment_convert()
   <input type="hidden" name="dir"    value="$dir" />
   <input type="hidden" name="count"  value="$count" />
   $radio $title $name $comment
-  <input type="button" name="pcomment" value="{$_pcmt_messages['btn_comment']}" />
+  <input type="button" value="{$_pcmt_messages['btn_comment']}" />
   </div>
 EOD;
 		$form_end = '</form>' . "\n";

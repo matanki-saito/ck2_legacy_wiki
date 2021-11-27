@@ -1,9 +1,0 @@
-User-agent: Slurp
-Crawl-delay: 10
-
-User-agent: baiduspider
-Disallow: /
-
-User-agent: PerMan Surfer
-Disallow: /
-

@@ -166,7 +166,7 @@ function plugin_pcomment_convert()
   <input type="hidden" name="dir"    value="$dir" />
   <input type="hidden" name="count"  value="$count" />
   $radio $title $name $comment
-  <input type="button" value="{$_pcmt_messages['btn_comment']}" />
+  <input type="button" name="pcomment" value="{$_pcmt_messages['btn_comment']}" />
   </div>
 EOD;
 		$form_end = '</form>' . "\n";

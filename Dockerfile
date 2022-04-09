@@ -1,4 +1,4 @@
-FROM php:7.4.26-apache
+FROM php:7.4.28-apache
 
 COPY ./pukiwiki/ /var/www/html/
 

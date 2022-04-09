@@ -51,7 +51,7 @@ function pkwk_mail_notify($subject, $message, $footer = array())
 	if (isset($footer['PAGE'])) $subject = str_replace('$page', $footer['PAGE'], $subject);
 
 	// Footer
-	if (isset($footer['REMOTE_ADDR'])) $footer['REMOTE_ADDR'] = $_SERVER['REMOTE_ADDR'];
+	if (isset($footer['REMOTE_ADDR'])) $footer['REMOTE_ADDR'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
 	if (isset($footer['USER_AGENT']))
 		$footer['USER_AGENT']  = '(' . UA_PROFILE . ') ' . UA_NAME . '/' . UA_VERS;
 	if (! empty($footer)) {

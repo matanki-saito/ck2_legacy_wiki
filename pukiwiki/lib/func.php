@@ -68,7 +68,7 @@ function pkwk_log_updates($page, $diff_content) {
 		'time' => gmdate('Y-m-d H:i:s', $timestamp),
 		'uri' => $_SERVER['REQUEST_URI'],
 		'method' => $_SERVER['REQUEST_METHOD'],
-		'remote_addr' => $_SERVER['REMOTE_ADDR'],
+		'remote_addr' => $_SERVER['HTTP_X_FORWARDED_FOR'],
 		'user_agent' => $_SERVER['HTTP_USER_AGENT'],
 		'page' => $page,
 		'user' => $auth_user,

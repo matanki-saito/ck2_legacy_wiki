@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone.
 // func.php
 // Copyright
-//   2002-2020 PukiWiki Development Team
+//   2002-2022 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -15,6 +15,11 @@ define('PKWK_URI_RELATIVE', 0);
 define('PKWK_URI_ROOT', 1);
 /** Absolute URI. */
 define('PKWK_URI_ABSOLUTE', 2);
+
+/** New page name - its length is need to be within the soft limit. */
+define('PKWK_PAGENAME_BYTES_SOFT_LIMIT', 115);
+/** Page name - its length is need to be within the hard limit. */
+define('PKWK_PAGENAME_BYTES_HARD_LIMIT', 125);
 
 function pkwk_log($message)
 {
@@ -142,6 +147,32 @@ function is_page($page, $clearcache = FALSE)
 {
 	if ($clearcache) clearstatcache();
 	return file_exists(get_filename($page));
+}
+
+function is_pagename_bytes_within_soft_limit($page)
+{
+	return strlen($page) <= PKWK_PAGENAME_BYTES_SOFT_LIMIT;
+}
+
+function is_pagename_bytes_within_hard_limit($page)
+{
+	return strlen($page) <= PKWK_PAGENAME_BYTES_SOFT_LIMIT;
+}
+
+function page_exists_in_history($page)
+{
+	if (is_page($page)) {
+		return true;
+	}
+	$diff_file = DIFF_DIR . encode($page) . '.txt';
+	if (file_exists($diff_file)) {
+		return true;
+	}
+	$backup_file = BACKUP_DIR . encode($page) . BACKUP_EXT;
+	if (file_exists($backup_file)) {
+		return true;
+	}
+	return false;
 }
 
 function is_editable($page)
@@ -524,20 +555,17 @@ function page_list($pages, $cmd = 'read', $withfilename = FALSE)
 		mb_regex_encoding(SOURCE_ENCODING);
 		$readings = get_readings($pages);
 	}
-
 	$list = $matches = array();
-
-	// Shrink URI for read
-	if ($cmd == 'read') {
-		$href = $script . '?';
-	} else {
-		$href = $script . '?cmd=' . $cmd . '&amp;page=';
-	}
 	uasort($pages, 'strnatcmp');
 	foreach($pages as $file=>$page) {
-		$r_page  = pagename_urlencode($page);
 		$s_page  = htmlsc($page, ENT_QUOTES);
-		$str = '   <li><a href="' . $href . $r_page . '">' .
+		// Shrink URI for read
+		if ($cmd == 'read') {
+			$href = get_page_uri($page);
+		} else {
+			$href = $script . '?cmd=' . $cmd . '&amp;page=' . rawurlencode($page);
+		}
+		$str = '   <li><a href="' . $href . '">' .
 			$s_page . '</a> ' . get_pg_passage($page);
 		if ($withfilename) {
 			$s_file = htmlsc($file);
@@ -646,6 +674,21 @@ EOD;
 	}
 	exit;
 }
+
+function die_invalid_pagename() {
+	$title = 'Error';
+	$page = 'Error: Invlid page name';
+	$body = <<<EOD
+<h3>Error</h3>
+<strong>Error message: Invalid page name</strong>
+EOD;
+
+	pkwk_common_headers();
+	header('HTTP/1.0 400 Bad request');
+	catbody($title, $page, $body);
+	exit;
+}
+
 
 // Have the time (as microtime)
 function getmicrotime()
@@ -800,6 +843,7 @@ function get_autoaliases()
 {
 	global $aliaspage, $autoalias_max_words;
 	static $pairs;
+	$preg_u = get_preg_u();
 
 	if (! isset($pairs)) {
 		$pairs = array();
@@ -813,7 +857,8 @@ EOD;
 		$matches  = array();
 		$count = 0;
 		$max   = max($autoalias_max_words, 0);
-		if (preg_match_all('/' . $pattern . '/x', $postdata, $matches, PREG_SET_ORDER)) {
+		if (preg_match_all('/' . $pattern . '/x' . get_preg_u(), $postdata,
+			$matches, PREG_SET_ORDER)) {
 			foreach($matches as $key => $value) {
 				if ($count ==  $max) break;
 				$name = trim($value[1]);
@@ -859,11 +904,11 @@ function get_base_uri($uri_type = PKWK_URI_RELATIVE)
  */
 function get_page_uri($page, $uri_type = PKWK_URI_RELATIVE)
 {
-	global $defaultpage;
+	global $page_uri_handler, $defaultpage;
 	if ($page === $defaultpage) {
 		return get_base_uri($uri_type);
 	}
-	return get_base_uri($uri_type) . '?' . pagename_urlencode($page);
+	return get_base_uri($uri_type) . $page_uri_handler->get_page_uri_virtual_query($page);
 }
 
 // Get absolute-URI of this script
@@ -1037,9 +1082,14 @@ function guess_script_absolute_uri()
 function input_filter($param)
 {
 	static $magic_quotes_gpc = NULL;
-	if ($magic_quotes_gpc === NULL)
-	    $magic_quotes_gpc = get_magic_quotes_gpc();
-
+	if ($magic_quotes_gpc === NULL) {
+		if (function_exists('get_magic_quotes_gpc')) {
+			// No 'get_magic_quotes_gpc' function in PHP8
+			$magic_quotes_gpc = get_magic_quotes_gpc();
+		} else {
+			$magic_quotes_gpc = 0;
+		}
+	}
 	if (is_array($param)) {
 		return array_map('input_filter', $param);
 	} else {
@@ -1066,7 +1116,7 @@ function csv_explode($separator, $string)
 
 	foreach ($matches[1] as $str) {
 		$len = strlen($str);
-		if ($len > 1 && $str{0} == '"' && $str{$len - 1} == '"')
+		if ($len > 1 && $str[0] == '"' && $str[$len - 1] == '"')
 			$str = str_replace('""', '"', substr($str, 1, -1));
 		$retval[] = $str;
 	}
@@ -1076,7 +1126,7 @@ function csv_explode($separator, $string)
 // Implode an array with CSV data format (escape double quotes)
 function csv_implode($glue, $pieces)
 {
-	$_glue = ($glue != '') ? '\\' . $glue{0} : '';
+	$_glue = ($glue != '') ? '\\' . $glue[0] : '';
 	$arr = array();
 	foreach ($pieces as $str) {
 		if (preg_match('/[' . '"' . "\n\r" . $_glue . ']/', $str))
@@ -1155,6 +1205,50 @@ function manage_page_redirect() {
 		return TRUE;
 	}
 	return FALSE;
+}
+
+/**
+ * Return 'u' (PCRE_UTF8) if PHP7+ and UTF-8.
+ */
+function get_preg_u() {
+	static $utf8u; // 'u'(PCRE_UTF8) or ''
+	if (! isset($utf8u)) {
+		if (version_compare('7.0.0', PHP_VERSION, '<=')
+			&& defined('PKWK_UTF8_ENABLE')) {
+			$utf8u = 'u';
+		} else {
+			$utf8u = '';
+		}
+	}
+	return $utf8u;
+}
+
+// Default Page name - URI mapping handler
+class PukiWikiStandardPageURIHandler {
+	function filter_raw_query_string($query_string) {
+		return $query_string;
+	}
+
+	function get_page_uri_virtual_query($page) {
+		return '?' . pagename_urlencode($page);
+	}
+
+	function get_page_from_query_string($query_string) {
+		$param1st = preg_replace("#^([^&]*)&.*$#", "$1", $query_string);
+		if ($param1st == '') {
+			return null; // default page
+		}
+		if (strpos($param1st, '=') !== FALSE) {
+			// Found '/?key=value' (Top page with additional query params)
+			return null; // default page
+		}
+		$page = urldecode($param1st);
+		$page2 = input_filter($page);
+		if ($page !== $page2) {
+			return FALSE; // Error page
+		}
+		return $page2;
+	}
 }
 
 //// Compat ////

@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone.
 // html.php
 // Copyright
-//   2002-2020 PukiWiki Development Team
+//   2002-2022 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -70,7 +70,7 @@ function catbody($title, $page, $body)
 	$_LINK['rss10']    = "$script?cmd=rss&amp;ver=1.0"; // Same as 'rdf'
 	$_LINK['rss20']    = "$script?cmd=rss&amp;ver=2.0";
 	$_LINK['search']   = "$script?cmd=search";
-	$_LINK['top']      = get_page_uri($defaultpage);
+	$_LINK['top']      = get_base_uri();
 	$_LINK['unfreeze'] = "$script?cmd=unfreeze&amp;page=$r_page";
 	$_LINK['upload']   = "$script?plugin=attach&amp;pcmd=upload&amp;page=$r_page";
 	$_LINK['canonical_url'] = $canonical_url;
@@ -535,7 +535,7 @@ function make_related($page, $tag = '')
 
 function _convert_line_rule_to_regex($a)
 {
-	return '/' . $a . '/';
+	return '/' . $a . '/' . get_preg_u();
 }
 
 // User-defined rules (convert without replacing source)

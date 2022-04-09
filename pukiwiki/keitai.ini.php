@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone.
 // keitai.ini.php
 // Copyright
-//   2002-2017 PukiWiki Development Team
+//   2002-2022 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -178,10 +178,13 @@ switch ("$ua_name/$ua_vers") {
 
 // ユーザ定義ルール(コンバート時に置換)
 $line_rules = array(
-	'COLOR\(([^\(\)]*)\){([^}]*)}'	=> '<font color="$1">$2</font>',
-	'SIZE\(([^\(\)]*)\){([^}]*)}'	=> '$2',	// Disabled
-	'COLOR\(([^\(\)]*)\):((?:(?!COLOR\([^\)]+\)\:).)*)'	=> '<font color="$1">$2</font>',
-	'SIZE\(([^\(\)]*)\):((?:(?!SIZE\([^\)]+\)\:).)*)'	=> '$2', // Disabled
+	'COLOR\(((?:[a-zA-Z]{1,20})|(?:#[0-9a-fA-F]{3,6}))\){([^}]*)}'
+		=> '<font color="$1">$2</font>',
+	'SIZE\((\d{1,2})\){([^}]*)}' => '$2', // Disabled
+	'COLOR\(((?:[a-zA-Z]{1,20})|(?:#[0-9a-fA-F]{3,6}))\):((?:(?!COLOR\([^\)]+\)\:).)*)'
+		=> '<font color="$1">$2</font>',
+	// "SIZE(n):" PukiWiki 1.3 compatible notation
+	'SIZE\(([1-7])\):((?:(?!SIZE\([^\)]+\)\:).)*)' => '$2', // Disabled
 	'%%%(?!%)((?:(?!%%%).)*)%%%'	=> '<ins>$1</ins>',
 	'%%(?!%)((?:(?!%%).)*)%%'	=> '<del>$1</del>',
 	"'''(?!')((?:(?!''').)*)'''"	=> '<em>$1</em>',

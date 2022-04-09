@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone
 // attach.inc.php
 // Copyright
-//   2003-2020 PukiWiki Development Team
+//   2003-2022 PukiWiki Development Team
 //   2002-2003 PANDA <panda@arino.jp> http://home.arino.jp/
 //   2002      Y.MASUI <masui@hisec.co.jp> http://masui.net/pukiwiki/
 //   2001-2002 Originally written by yu-ji
@@ -46,6 +46,9 @@ define('PLUGIN_ATTACH_FILE_ICON', '<img src="' . IMAGE_DIR .  'file.png"' .
 
 // mime-typeを記述したページ
 define('PLUGIN_ATTACH_CONFIG_PAGE_MIME', 'plugin/attach/mime-type');
+
+// Limit attach file name length
+define('PLUGIN_ATTACH_MAX_LEAF_BASE_NAME_LENGTH', 240);
 
 //-------- convert
 function plugin_attach_convert()
@@ -190,10 +193,15 @@ function attach_upload($file, $page, $pass = NULL)
 	}
 
 	$obj = new AttachFile($page, $file['name']);
-	if ($obj->exist)
+	if ($obj->exist) {
 		return array('result'=>FALSE,
 			'msg'=>$_attach_messages['err_exists']);
-
+	}
+	$leafbasename_len = strlen($obj->leafbasename);
+	if (PLUGIN_ATTACH_MAX_LEAF_BASE_NAME_LENGTH < $leafbasename_len) {
+		die_message('Too long file name (' . $leafbasename_len . ' bytes)');
+		exit;
+	}
 	if (move_uploaded_file($file['tmp_name'], $obj->filename))
 		chmod($obj->filename, PLUGIN_ATTACH_FILE_MODE);
 
@@ -443,7 +451,8 @@ class AttachFile
 		$this->file = preg_replace('#^.*/#','',$file);
 		$this->age  = is_numeric($age) ? $age : 0;
 
-		$this->basename = UPLOAD_DIR . encode($page) . '_' . encode($this->file);
+		$this->leafbasename = encode($page) . '_' . encode($this->file);
+		$this->basename = UPLOAD_DIR . $this->leafbasename;
 		$this->filename = $this->basename . ($age ? '.' . $age : '');
 		$this->logname  = $this->basename . '.log';
 		$this->exist    = file_exists($this->filename);
@@ -488,11 +497,6 @@ class AttachFile
 		}
 		flock($fp, LOCK_UN);
 		fclose($fp);
-	}
-
-	// 日付の比較関数
-	function datecomp($a, $b) {
-		return ($a->time == $b->time) ? 0 : (($a->time > $b->time) ? -1 : 1);
 	}
 
 	function toString($showicon, $showinfo)
@@ -728,24 +732,14 @@ EOD;
 		$this->status['count'][$this->age]++;
 		$this->putstatus();
 		$filename = $this->file;
-
-		// Care for Japanese-character-included file name
-		$legacy_filename = mb_convert_encoding($filename, 'UTF-8', SOURCE_ENCODING);
-		if (LANG == 'ja') {
-			switch(UA_NAME . '/' . UA_PROFILE){
-			case 'MSIE/default':
-				$legacy_filename = mb_convert_encoding($filename, 'SJIS', SOURCE_ENCODING);
-				break;
-			}
-		}
+		// RFC6266 attachement file name
 		$utf8filename = mb_convert_encoding($filename, 'UTF-8', SOURCE_ENCODING);
 
 		ini_set('default_charset', '');
 		mb_http_output('pass');
 
 		pkwk_common_headers();
-		header('Content-Disposition: inline; filename="' . $legacy_filename
-			. '"; filename*=utf-8\'\'' . rawurlencode($utf8filename));
+		header('Content-Disposition: inline; filename*=utf-8\'\'' . rawurlencode($utf8filename));
 		header('Content-Length: ' . $this->size);
 		header('Content-Type: '   . $this->type);
 		// Disable output bufferring
@@ -776,6 +770,12 @@ class AttachFiles
 	function add($file, $age)
 	{
 		$this->files[$file][$age] = new AttachFile($this->page, $file, $age);
+	}
+
+	// date comparison function for uasort()
+	// $a, $b: AttachFile object
+	function datecomp($a, $b) {
+		return ($a->time == $b->time) ? 0 : (($a->time > $b->time) ? -1 : 1);
 	}
 
 	// ファイル一覧を取得
@@ -823,11 +823,10 @@ class AttachFiles
 				$files[$file] = & $this->files[$file][0];
 			}
 		}
-		uasort($files, array('AttachFile', 'datecomp'));
+		uasort($files, array($this, 'datecomp'));
 		foreach (array_keys($files) as $file) {
 			$ret .= $files[$file]->toString(TRUE, TRUE) . ' ';
 		}
-
 		return $ret;
 	}
 }

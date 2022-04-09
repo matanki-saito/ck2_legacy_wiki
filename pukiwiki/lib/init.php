@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone.
 // init.php
 // Copyright
-//   2002-2020 PukiWiki Development Team
+//   2002-2022 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -10,11 +10,13 @@
 
 // PukiWiki version / Copyright / Licence
 
-define('S_VERSION', '1.5.3');
+define('S_VERSION', '1.5.4');
 define('S_COPYRIGHT',
-	'<strong>PukiWiki ' . S_VERSION . '</strong>' .
-	' &copy; 2001-2020' .
-	' <a href="https://pukiwiki.osdn.jp/">PukiWiki Development Team</a>'
+	'<strong>PukiWiki '
+	. S_VERSION
+	. '</strong>'
+	. ' &copy; 2001-2022'
+	. ' <a href="https://pukiwiki.osdn.jp/">PukiWiki Development Team</a>'
 );
 
 /////////////////////////////////////////////////
@@ -61,6 +63,12 @@ if (! file_exists(INI_FILE) || ! is_readable(INI_FILE)) {
 	require(INI_FILE);
 }
 if ($die) die_message(nl2br("\n\n" . $die));
+
+/////////////////////////////////////////////////
+// Page-URI mapping handler (default)
+if (! $page_uri_handler) {
+	$page_uri_handler = new PukiWikiStandardPageURIHandler();
+}
 
 /////////////////////////////////////////////////
 // INI_FILE: LANG に基づくエンコーディング設定
@@ -295,6 +303,21 @@ if (PKWK_QUERY_STRING_MAX && strlen($arg) > PKWK_QUERY_STRING_MAX) {
 }
 $arg = input_filter($arg); // \0 除去
 
+// Convert QueryString by PageURIHandler
+$arg_replaced = $page_uri_handler->filter_raw_query_string($arg);
+if ($arg_replaced !== $arg) {
+	$_GET = array();
+	$m = array();
+	foreach (explode('&', $arg_replaced) as $kv) {
+		if (preg_match('/^([^=]+)(=(.+))?/', $kv, $m)) {
+			$_GET[$m[1]] = is_null($m[3]) ? '' : $m[3];
+		}
+	}
+	unset($m);
+	$arg = $arg_replaced;
+}
+unset($arg_replaced);
+
 // unset QUERY_STRINGs
 foreach (array('QUERY_STRING', 'argv', 'argc') as $key) {
 	unset(${$key}, $_SERVER[$key], $HTTP_SERVER_VARS[$key]);
@@ -398,13 +421,14 @@ if (isset($get['md5']) && $get['md5'] != '' &&
 if (! isset($vars['cmd']) && ! isset($vars['plugin'])) {
 
 	$get['cmd']  = $post['cmd']  = $vars['cmd']  = 'read';
-
-	$arg = preg_replace("#^([^&]*)&.*$#", "$1", $arg);
-	if ($arg == '') $arg = $defaultpage;
-	if (strpos($arg, '=') !== false) $arg = $defaultpage; // Found '/?key=value'
-	$arg = urldecode($arg);
-	$arg = strip_bracket($arg);
-	$arg = input_filter($arg);
+	$arg = $page_uri_handler->get_page_from_query_string($arg);
+	if ($arg === FALSE) {
+		// page is FALSE if page name is not valid
+		// Keep $arg is FALSE
+	} else if (!$arg) {
+		// if $arg is null or '' ($arg is NOT FALSE)
+		$arg = $defaultpage;
+	}
 	$get['page'] = $post['page'] = $vars['page'] = $arg;
 }
 
@@ -425,7 +449,8 @@ $BracketName = '(?!\s):?[^\r\n\t\f\[\]<>#&":]+:?(?<!\s)';
 $InterWikiName = '(\[\[)?((?:(?!\s|:|\]\]).)+):(.+)(?(1)\]\])';
 
 // 注釈
-$NotePattern = '/\(\(((?:(?>(?:(?!\(\()(?!\)\)(?:[^\)]|$)).)+)|(?R))*)\)\)/x';
+$NotePattern = '/\(\(((?:(?>(?:(?!\(\()(?!\)\)(?:[^\)]|$)).)+)|(?R))*)\)\)/x'
+	. get_preg_u();
 
 /////////////////////////////////////////////////
 // 初期設定(ユーザ定義ルール読み込み)

@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone
 // convert_html.php
 // Copyright
-//   2002-2016 PukiWiki Development Team
+//   2002-2022 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -64,7 +64,7 @@ class Element
 		return $this->last = & $obj->last;
 	}
 
-	function canContain($obj)
+	function canContain(& $obj)
 	{
 		return TRUE;
 	}
@@ -186,7 +186,7 @@ class Inline extends Element
 		return $this;
 	}
 
-	function canContain($obj)
+	function canContain(& $obj)
 	{
 		return is_a($obj, 'Inline');
 	}
@@ -226,7 +226,7 @@ class Paragraph extends Element
 		$this->insert(Factory_Inline($text));
 	}
 
-	function canContain($obj)
+	function canContain(& $obj)
 	{
 		return is_a($obj, 'Inline');
 	}
@@ -522,18 +522,21 @@ class TableCell extends Element
 		parent::__construct();
 		$this->style = $matches = array();
 
-		while (preg_match('/^(?:(LEFT|CENTER|RIGHT)|(BG)?COLOR\(([#\w]+)\)|SIZE\((\d+)\)):(.*)$/',
+		while (preg_match('/^(?:(LEFT|CENTER|RIGHT)|(BG)?COLOR\((#?\w{1,20})\)|SIZE\((\d{1,2})\)|(BOLD)):(.*)$/',
 		    $text, $matches)) {
 			if ($matches[1]) {
 				$this->style['align'] = 'text-align:' . strtolower($matches[1]) . ';';
-				$text = $matches[5];
+				$text = $matches[6];
 			} else if ($matches[3]) {
 				$name = $matches[2] ? 'background-color' : 'color';
 				$this->style[$name] = $name . ':' . htmlsc($matches[3]) . ';';
-				$text = $matches[5];
-			} else if ($matches[4]) {
+				$text = $matches[6];
+			} else if (is_numeric($matches[4])) {
 				$this->style['size'] = 'font-size:' . htmlsc($matches[4]) . 'px;';
-				$text = $matches[5];
+				$text = $matches[6];
+			} else if ($matches[5]) {
+				$this->style['bold'] = 'font-weight:bold;';
+				$text = $matches[6];
 			}
 		}
 		if ($is_template && is_numeric($text))
@@ -548,7 +551,7 @@ class TableCell extends Element
 			$text      = substr($text, 1);
 		}
 
-		if ($text != '' && $text{0} == '#') {
+		if ($text != '' && $text[0] == '#') {
 			// Try using Div class for this $text
 			$obj = & Factory_Div($this, $text);
 			if (is_a($obj, 'Paragraph'))
@@ -788,7 +791,7 @@ class Pre extends Element
 		global $preformat_ltrim;
 		parent::__construct();
 		$this->elements[] = htmlsc(
-			(! $preformat_ltrim || $text == '' || $text{0} != ' ') ? $text : substr($text, 1));
+			(! $preformat_ltrim || $text == '' || $text[0] != ' ') ? $text : substr($text, 1));
 	}
 
 	function canContain(& $obj)
@@ -941,7 +944,7 @@ class Body extends Element
 			}
 
 			// The first character
-			$head = $line{0};
+			$head = $line[0];
 
 			// Heading
 			if ($head == '*') {
@@ -993,14 +996,11 @@ class Body extends Element
 			$id     = & $autoid;
 			$anchor = '';
 		} else {
-			$anchor = ' &aname(' . $id . ',super,full,nouserselect){' . $_symbol_anchor . '};';
+			$anchor = '&aname(' . $id . ',super,full,nouserselect){' . $_symbol_anchor . '};';
 		}
-
-		$text = ' ' . $text;
-
+		$text = trim($text);
 		// Add 'page contents' link to its heading
 		$this->contents_last = & $this->contents_last->add(new Contents_UList($text, $level, $id));
-
 		// Add heding
 		return array($text . $anchor, $this->count > 1 ? "\n" . $top : '', $autoid);
 	}

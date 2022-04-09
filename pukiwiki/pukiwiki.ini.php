@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone
 // pukiwiki.ini.php
 // Copyright
-//   2002-2020 PukiWiki Development Team
+//   2002-2022 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -49,7 +49,7 @@ if (! defined('PKWK_DISABLE_INLINE_IMAGE_FROM_URI'))
 // PKWK_QUERY_STRING_MAX
 //   Max length of GET method, prohibits some worm attack ASAP
 //   NOTE: Keep (page-name + attach-file-name) <= PKWK_QUERY_STRING_MAX
-define('PKWK_QUERY_STRING_MAX', 640); // Bytes, 0 = OFF
+define('PKWK_QUERY_STRING_MAX', 2000); // Bytes, 0 = OFF
 
 /////////////////////////////////////////////////
 // Experimental features
@@ -86,7 +86,6 @@ define('BACKUP_DIR',    DATA_HOME . 'wikidata/backup/'   ); // Backups
 define('CACHE_DIR',     DATA_HOME . 'wikidata/cache/'    ); // Some sort of caches
 define('UPLOAD_DIR',    DATA_HOME . 'wikidata/attach/'   ); // Attached files and logs
 define('COUNTER_DIR',   DATA_HOME . 'wikidata/counter/'  ); // Counter plugin's counts
-define('TRACKBACK_DIR', DATA_HOME . 'wikidata/trackback/'); // TrackBack logs
 define('PLUGIN_DIR',    DATA_HOME . 'plugin/'   ); // Plugin directory
 
 function makeDirIfNotExist($dir){
@@ -336,6 +335,8 @@ $search_auth = 0;
 
 /////////////////////////////////////////////////
 // AutoTicketLink
+// (0:Create AutoTicketLinkName page automatically, 1:Don't create the page)
+$no_autoticketlinkname = 0;
 $ticket_link_sites = array(
 /*
 	array(
@@ -581,6 +582,11 @@ $usedatetime = 1;
 // Logging updates (0 or 1)
 $logging_updates = 0;
 $logging_updates_log_dir = '/var/log/pukiwiki';
+
+/////////////////////////////////////////////////
+// Page-URI mapping handler ( See https://pukiwiki.osdn.jp/?PukiWiki/PageURI )
+$page_uri_handler = null; // default
+// $page_uri_handler = new PukiWikiStandardPageURIHandler();
 
 /////////////////////////////////////////////////
 // User-Agent settings

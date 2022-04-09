@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone.
 // file.php
 // Copyright
-//   2002-2020 PukiWiki Development Team
+//   2002-2022 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -223,7 +223,7 @@ function make_str_rules($source)
 		$line = & $lines[$i]; // Modify directly
 
 		// Ignore null string and preformatted texts
-		if ($line == '' || $line{0} == ' ' || $line{0} == "\t") continue;
+		if ($line == '' || $line[0] == ' ' || $line[0] == "\t") continue;
 
 		// Modify this line?
 		if ($modify) {
@@ -592,11 +592,8 @@ function lastmodified_add($update = '', $remove = '')
 		return;
 	}
 
-
-
 	// ----
 	// Update the page 'RecentChanges'
-
 	$recent_pages = array_splice($recent_pages, 0, $maxshow);
 	$file = get_filename($whatsnew);
 
@@ -610,9 +607,11 @@ function lastmodified_add($update = '', $remove = '')
 	// Recreate
 	ftruncate($fp, 0);
 	rewind($fp);
-	foreach ($recent_pages as $_page=>$time)
-		fputs($fp, '-' . htmlsc(format_date($time)) .
-			' - ' . '[[' . htmlsc($_page) . ']]' . "\n");
+	$do_diff = exist_plugin('diff');
+	foreach ($recent_pages as $_page=>$time) {
+		$line = get_recentchanges_line($_page, $time, $do_diff);
+		fputs($fp, $line);
+	}
 	fputs($fp, '#norelated' . "\n"); // :)
 
 	flock($fp, LOCK_UN);
@@ -672,11 +671,11 @@ function put_lastmodified()
 	flock($fp, LOCK_EX);
 	ftruncate($fp, 0);
 	rewind($fp);
+	$do_diff = exist_plugin('diff');
 	foreach (array_keys($recent_pages) as $page) {
-		$time      = $recent_pages[$page];
-		$s_lastmod = htmlsc(format_date($time));
-		$s_page    = htmlsc($page);
-		fputs($fp, '-' . $s_lastmod . ' - [[' . $s_page . ']]' . "\n");
+		$time = $recent_pages[$page];
+		$line = get_recentchanges_line($page, $time, $do_diff);
+		fputs($fp, $line);
 	}
 	fputs($fp, '#norelated' . "\n"); // :)
 	flock($fp, LOCK_UN);
@@ -687,6 +686,27 @@ function put_lastmodified()
 		autolink_pattern_write(CACHE_DIR . PKWK_AUTOLINK_REGEX_CACHE,
 			get_autolink_pattern($pages, $autolink));
 	}
+}
+
+/**
+ * Get RecentChanges line.
+ */
+function get_recentchanges_line($page, $time, $is_diff)
+{
+	global $do_backup;
+	$lastmod = format_date($time);
+	if ($is_diff) {
+		$diff = '[ &pageaction("' . $page . '",diff);';
+		if ($do_backup) {
+			$diff_backup = $diff . ' | &pageaction("' . $page . '",backup); ]';
+		} else {
+			$diff_backup = $diff . ' ]';
+		}
+	} else {
+		$diff_backup = '';
+	}
+	$line = '-' . $lastmod . ' - ' . $diff_backup . ' [[' . $page . ']]' . "\n";
+	return $line;
 }
 
 /**
@@ -1056,11 +1076,13 @@ function pkwk_chown($filename, $preserve_time = TRUE)
 		//   * touch() before copy() is for 'rw-r--r--' instead of 'rwxr-xr-x' (with umask 022).
 		//   * (PHP 4 < PHP 4.2.0) touch() with the third argument is not implemented and retuns NULL and Warn.
 		//   * @unlink() before rename() is for Windows but here's for Unix only
-		flock($ffile, LOCK_EX) or die('pkwk_chown(): flock() failed');
+		flock($ffile, LOCK_EX) or
+			die('pkwk_chown(): flock() failed - ' . get_htmlsafe_filename($filename));
 		$result = touch($tmp) && copy($filename, $tmp) &&
 			($preserve_time ? (touch($tmp, $stat[9], $stat[8]) || touch($tmp, $stat[9])) : TRUE) &&
 			rename($tmp, $filename);
-		flock($ffile, LOCK_UN) or die('pkwk_chown(): flock() failed');
+		flock($ffile, LOCK_UN) or
+			die('pkwk_chown(): flock() failed - ' . get_htmlsafe_filename($filename));
 
 		fclose($ffile) or die('pkwk_chown(): fclose() failed');
 
@@ -1160,4 +1182,11 @@ function prepare_links_related($page) {
 			links_init();
 		}
 	}
+}
+
+/**
+ * Get HTML-safe string filename for die.
+ */
+function get_htmlsafe_filename($filename) {
+	return preg_replace('#[^\w\/\.\-\$\%]#', '', $filename);
 }

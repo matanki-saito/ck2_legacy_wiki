@@ -2,7 +2,7 @@
 // PukiWiki - Yet another WikiWikiWeb clone.
 // make_link.php
 // Copyright
-//   2003-2020 PukiWiki Development Team
+//   2003-2021 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
@@ -117,7 +117,7 @@ class InlineConverter
 		$this->page   = $page;
 		$this->result = array();
 
-		$string = preg_replace_callback('/' . $this->pattern . '/x',
+		$string = preg_replace_callback('/' . $this->pattern . '/x' . get_preg_u(),
 			array(& $this, 'replace'), $string);
 
 		$arr = explode("\x08", make_line_rules(htmlsc($string)));
@@ -141,7 +141,8 @@ class InlineConverter
 	function get_objects($string, $page)
 	{
 		$matches = $arr = array();
-		preg_match_all('/' . $this->pattern . '/x', $string, $matches, PREG_SET_ORDER);
+		preg_match_all('/' . $this->pattern . '/x' . get_preg_u(),
+			$string, $matches, PREG_SET_ORDER);
 		foreach ($matches as $match) {
 			$obj = $this->get_converter($match);
 			if ($obj->set($match, $page) !== FALSE) {
@@ -281,7 +282,7 @@ EOD;
 
 		// Re-get true plugin name and patameters (for PHP 4.1.2)
 		$matches = array();
-		if (preg_match('/^' . $this->pattern . '/x', $all, $matches)
+		if (preg_match('/^' . $this->pattern . '/x' . get_preg_u(), $all, $matches)
 			&& $matches[1] != $this->plain) 
 			list(, $this->plain, $name, $this->param) = $matches;
 
@@ -778,9 +779,13 @@ class Link_autoalias extends Link
 
 	function Link_autoalias($start)
 	{
+		$this->__construct($start);
+	}
+	function __construct($start)
+	{
 		global $autoalias, $aliaspage;
 
-		parent::Link($start);
+		parent::__construct($start);
 
 		if (! $autoalias || ! file_exists(CACHE_DIR . PKWK_AUTOALIAS_REGEX_CACHE) || $this->page == $aliaspage)
 		{
@@ -826,7 +831,11 @@ class Link_autoalias_a extends Link_autoalias
 {
 	function Link_autoalias_a($start)
 	{
-		parent::Link_autoalias($start);
+		$this->__construct($start);
+	}
+	function __construct($start)
+	{
+		parent::__construct($start);
 	}
 	function get_pattern()
 	{
@@ -845,13 +854,11 @@ function make_pagelink($page, $alias = '', $anchor = '', $refer = '', $isautolin
 
 	if ($page == '') return '<a href="' . $anchor . '">' . $s_alias . '</a>';
 
-	$r_page  = pagename_urlencode($page);
-	$r_refer = ($refer == '') ? '' : '&amp;refer=' . rawurlencode($refer);
-
 	$page_filetime = fast_get_filetime($page);
 	$is_page = $page_filetime !== 0;
-	if (! isset($related[$page]) && $page !== $vars['page'] && is_page)
+	if (! isset($related[$page]) && $page !== $vars['page'] && $is_page) {
 		$related[$page] = $page_filetime;
+	}
 
 	if ($isautolink || $is_page) {
 		// Hyperlink to the page
@@ -867,12 +874,14 @@ function make_pagelink($page, $alias = '', $anchor = '', $refer = '', $isautolin
 		if ($s_page !== $s_alias) {
 			$title_attr_html = ' title="' . $s_page . '"';
 		}
-		return $al_left . '<a ' . 'href="' . $script . '?' . $r_page . $anchor .
+		return $al_left . '<a ' . 'href="' . get_page_uri($page) . $anchor .
 			'"' . $title_attr_html . ' class="' .
 			$attrs['class'] . '" data-mtime="' . $attrs['data_mtime'] .
 			'">' . $s_alias . '</a>' . $al_right;
 	} else {
 		// Support Page redirection
+		$r_page  = rawurlencode($page);
+		$r_refer = ($refer == '') ? '' : '&amp;refer=' . rawurlencode($refer);
 		$redirect_page = get_pagename_on_redirect($page);
 		if ($redirect_page !== false) {
 			return make_pagelink($redirect_page, $s_alias);
@@ -904,7 +913,7 @@ function get_fullname($name, $refer)
 	if ($name == '' || $name == './') return $refer;
 
 	// Absolute path
-	if ($name{0} == '/') {
+	if ($name[0] == '/') {
 		$name = substr($name, 1);
 		return ($name == '') ? $defaultpage : $name;
 	}
@@ -1023,7 +1032,7 @@ function get_ticketlink_jira_projects()
 		} else if (preg_match('/^--\s*([A-Z][A-Z0-9]{1,10}(?:_[A-Z0-9]{1,10}){0,2})(\s+(.+?))?\s*$/', $line, $m)) {
 			if ($active_jira_base_url) {
 				$project_key = $m[1];
-				$title = $m[2];
+				$title = isset($m[2]) ? $m[2] : '';
 				array_push($jira_projects, array(
 					'key' => $m[1],
 					'title' => $title,

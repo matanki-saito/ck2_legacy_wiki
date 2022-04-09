@@ -1,7 +1,7 @@
 <?php
 // PukiWiki - Yet another WikiWikiWeb clone.
 // edit.inc.php
-// Copyright 2001-2019 PukiWiki Development Team
+// Copyright 2001-2022 PukiWiki Development Team
 // License: GPL v2 or (at your option) any later version
 //
 // Edit plugin (cmd=edit)
@@ -31,11 +31,34 @@ function plugin_edit_action()
 	} else if (isset($vars['cancel'])) {
 		return plugin_edit_cancel();
 	}
-
+	ensure_valid_page_name_length($page);
 	$postdata = @join('', get_source($page));
 	if ($postdata === '') $postdata = auto_template($page);
 	$postdata = remove_author_info($postdata);
 	return array('msg'=>$_title_edit, 'body'=>edit_form($page, $postdata));
+}
+
+function ensure_valid_page_name_length($page)
+{
+	if (is_page($page)) {
+		// Continue
+	} else {
+		if (is_pagename_bytes_within_soft_limit($page)) {
+			// Continue
+		} else {
+			if (page_exists_in_history($page)) {
+				if (is_pagename_bytes_within_hard_limit($page)) {
+					// Continue
+				} else {
+					die_message('Page name too long (hard limit): ' . htmlsc($page));
+					exit;
+				}
+			} else {
+				die_message('Page name too long: ' . htmlsc($page));
+				exit;
+			}
+		}
+	}
 }
 
 /**
@@ -222,6 +245,7 @@ function plugin_edit_write()
 		exit;
 	}
 
+	ensure_valid_page_name_length($page);
 	$vars['msg'] = preg_replace(PLUGIN_EDIT_FREEZE_REGEX, '', $vars['msg']);
 	$msg = & $vars['msg']; // Reference
 
@@ -294,14 +318,16 @@ function plugin_edit_cancel()
  */
 function plugin_edit_setup_initial_pages()
 {
-	global $autoalias;
+	global $autoalias, $no_autoticketlinkname;
 
 	// Related: Rename plugin
 	if (exist_plugin('rename') && function_exists('plugin_rename_setup_initial_pages')) {
 		plugin_rename_setup_initial_pages();
 	}
 	// AutoTicketLinkName page
-	init_autoticketlink_def_page();
+	if (! $no_autoticketlinkname) {
+		init_autoticketlink_def_page();
+	}
 	// AutoAliasName page
 	if ($autoalias) {
 		init_autoalias_def_page();

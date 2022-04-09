@@ -49,6 +49,10 @@ if ($notify_discord) {
 
 /////////////////////////////////////////////////
 // Main
+if ($vars['page'] === FALSE) {
+	die_invalid_pagename();
+	exit;
+}
 if (manage_page_redirect()) {
 	exit;
 }
